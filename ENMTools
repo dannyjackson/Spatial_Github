@@ -1,0 +1,266 @@
+# ENMTools
+install.packages("ENMTools")
+
+utils::download.file(url = "https://raw.githubusercontent.com/mrmaxent/Maxent/master/ArchivedReleases/3.3.3k/maxent.jar",
+    destfile = paste0(system.file("java", package = "dismo"),
+        "/maxent.jar"), mode = "wb")
+
+library(ENMTools)
+library(dismo)
+
+env.files <- list.files(path = "/Volumes/BackupPlus/GIS_files/TucsonEnvironmentalLayers/forMaxent_noNA_tucson/Not_resampled/", full.names = TRUE)
+env <- stack(env.files)
+names(env) <- c("N11", "N21", "N22", "N23", "N24", "N31", "N41", "N42", "N43", "N52", "N71", "N81", "N82", "N90", "N95", "C1", "C10", "C11", "C12", "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "elev", "land", "Land", "Tmax3", "Tmax4", "Tmax5")
+env <- setMinMax(env)
+#plot(env[[1]])
+#env <- check.env(env)
+
+env[[1]][is.na(env[[1]])] <- 0
+env[[2]][is.na(env[[2]])] <- 0
+env[[3]][is.na(env[[3]])] <- 0
+env[[4]][is.na(env[[4]])] <- 0
+env[[5]][is.na(env[[5]])] <- 0
+env[[6]][is.na(env[[6]])] <- 0
+env[[7]][is.na(env[[7]])] <- 0
+env[[8]][is.na(env[[8]])] <- 0
+env[[9]][is.na(env[[9]])] <- 0
+env[[10]][is.na(env[[10]])] <- 0
+env[[11]][is.na(env[[11]])] <- 0
+env[[12]][is.na(env[[12]])] <- 0
+env[[13]][is.na(env[[13]])] <- 0
+env[[14]][is.na(env[[14]])] <- 0
+env[[15]][is.na(env[[15]])] <- 0
+
+env <- check.env(env)
+crs(env) <- "+proj=longlat +datum=WGS84 +no_defs"
+
+# check for NA values in bird data
+
+
+pyrr <- read.csv(("/Volumes/BackupPlus/GIS_files/Birds/ebird_pyrr_AprMay_2016_2021_latlong.csv"))
+x <- extract(env, pyrr)
+y <- which(is.na(x[,1]), arr.ind=TRUE)
+pyrr[y,]
+newpyrr <- pyrr[-c(y), ]
+write.csv(newpyrr, "/Volumes/BackupPlus/GIS_files/Birds/ebird_pyrr_AprMay_2016_2021_latlong_new.csv")
+
+
+noca <- read.csv(("/Volumes/BackupPlus/GIS_files/Birds/ebird_noca_AprMay_2016_2021_latlong.csv"))
+xn <- extract(env, noca)
+yn <- which(is.na(xn[,1]), arr.ind=TRUE)
+newnoca <- noca[-c(yn), ]
+write.csv(newnoca, "/Volumes/BackupPlus/GIS_files/Birds/ebird_noca_AprMay_2016_2021_latlong_new.csv")
+
+
+
+
+
+
+
+# run script
+options(java.parameters = "-Xmx8000m")
+
+library(ENMTools)
+library(dismo)
+
+env.files <- list.files(path = "/Volumes/BackupPlus/GIS_files/December2021/Tucson/", full.names = TRUE)
+env <- stack(env.files)
+names(env) <- c("N11", "N21", "N22", "N23", "N24", "N31", "N41", "N42", "N43", "N52", "N71", "N81", "N82", "N90", "N95", "C1", "C10", "C11", "C12", "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "elev", "land", "Land", "Tmax3", "Tmax4", "Tmax5")
+env <- setMinMax(env)
+#plot(env[[1]])
+#env <- check.env(env)
+
+env[[1]][is.na(env[[1]])] <- 0
+env[[2]][is.na(env[[2]])] <- 0
+env[[3]][is.na(env[[3]])] <- 0
+env[[4]][is.na(env[[4]])] <- 0
+env[[5]][is.na(env[[5]])] <- 0
+env[[6]][is.na(env[[6]])] <- 0
+env[[7]][is.na(env[[7]])] <- 0
+env[[8]][is.na(env[[8]])] <- 0
+env[[9]][is.na(env[[9]])] <- 0
+env[[10]][is.na(env[[10]])] <- 0
+env[[11]][is.na(env[[11]])] <- 0
+env[[12]][is.na(env[[12]])] <- 0
+env[[13]][is.na(env[[13]])] <- 0
+env[[14]][is.na(env[[14]])] <- 0
+env[[15]][is.na(env[[15]])] <- 0
+
+env <- check.env(env)
+crs(env) <- "+proj=longlat +datum=WGS84 +no_defs"
+
+# check for NA values in bird data
+
+pyrrhuloxia <- enmtools.species()
+pyrrhuloxia
+
+pyrrhuloxia.path <- paste("/Volumes/BackupPlus/GIS_files/Birds/ebird_pyrr_AprMay_2016_2021_latlong_new.csv", sep=',')
+pyrrhuloxia <- enmtools.species(species.name = "Pyrrhuloxia",
+                            presence.points = read.csv(pyrrhuloxia.path))
+pyrrhuloxia$range <- background.raster.buffer(pyrrhuloxia$presence.points, 50000, mask = env)
+
+pyrrhuloxia$background.points <- background.points.buffer(points = pyrrhuloxia$presence.points, radius = 20000, n = 1000, mask = env[[1]])
+
+
+
+#pyrrhuloxia$background.points <- ENMTools:::background.buffer(points = pyrrhuloxia$presence.points, buffer.width = 20000,buffer.type = "circles", mask = env[[1]], return.type = "raster", n= 1000)
+
+#pyrrhuloxia$background.points <- ENMTools:::background.buffer(points = pyrrhuloxia$presence.points, buffer.width = 20000,buffer.type = "circles", mask = env[[1]], n= 1000)
+
+
+
+northerncardinal <- enmtools.species()
+northerncardinal
+
+northerncardinal.path <- paste("/Volumes/BackupPlus/GIS_files/Birds/ebird_noca_AprMay_2016_2021_latlong_new.csv", sep=',')
+northerncardinal <- enmtools.species(species.name = "Northern Cardinal",
+                            presence.points = read.csv(northerncardinal.path))
+northerncardinal$range <- background.raster.buffer(northerncardinal$presence.points, 50000, mask = env)
+
+northerncardinal$background.points <- background.points.buffer(points = northerncardinal$presence.points, radius = 20000, n = 1000, mask = env[[1]])
+
+
+
+pyrrhuloxia <- check.species(pyrrhuloxia)
+northerncardinal <- check.species(northerncardinal)
+
+# interactive.plot.enmtools.species(pyrrhuloxia)
+# interactive.plot.enmtools.species(northerncardinal)
+
+# corr_matrix <- raster.cor.matrix(env)
+# raster.cor.plot(env)
+
+# env_uncorr <- env[[c("N11", "N21", "N22", "N23", "N24", "N31", "N41", "N42", "N43", "N52", "N71", "N81", "N82", "N90", "N95", "C1", "C10", "C11", "C12", "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "elev", "Land", "Tmax3", "Tmax4", "Tmax5")]]
+
+# env_uncorr <- env[[c("N95","N24", "C6", "C2")]]
+
+
+pyrrhuloxia.mx <- enmtools.maxent(pyrrhuloxia, env)
+northerncardinal.mx <- enmtools.maxent(northerncardinal, env)
+
+marginal.plots(pyrrhuloxia.mx, env, "X11_OpenWater.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X21_DevelopedOpenSpace.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X22_DevelopedLowIntensity.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X23_DevelopedMediumIntensity.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X24_DevelopedHighIntensity.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X31_BarrenLand.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X41_DeciduousForest.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X42_EvergreenForest.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X43_MixedForest.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X52_ShrubScrub.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X71_GrasslandsHerbaceous.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X81_PastureHay.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X82_CultivatedCrops.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X90_WoodyWetlands.tif")
+marginal.plots(pyrrhuloxia.mx, env, "X95_EmergentHerbaveousWetland.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim1.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim10.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim11.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim12.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim13.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim14.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim15.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim16.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim17.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim18.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim19.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim2.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim3.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim4.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim5.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim6.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim7.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim8.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Clim9.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Elev.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Land.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Tmax_3.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Tmax4.tif")
+marginal.plots(pyrrhuloxia.mx, env, "Tmax5.tif")
+
+# visualize.enm(pyrrhuloxia.mx, env, layers = c("bio1", "bio12"), plot.test.data = TRUE)
+
+raster.breadth(pyrrhuloxia.mx)
+# $B1
+# [1] 0.9647305
+
+# $B2
+# [1] 0.4555431
+
+raster.breadth(northerncardinal.mx)
+
+# $B1
+# [1] 0.9902993
+
+# $B2
+# [1] 0.7810193
+
+# repeat all of the above with NOCA!!!!!
+
+# ENMTools also provides metrics for measuring similarity between ENMs. These include Schoener’s D (Schoener 1968), I (Warren et al. 2008), and the Spearman rank correlation coefficient between two rasters. While D and I are commonly used in the ENM literature, they may tend to overestimate similarity between ENMs when many grid cells are of similar values (e.g., when two species prefer different habitat but the region contains a great deal of habitat that is unsuitable for both).
+
+
+raster.overlap(pyrrhuloxia.mx, northerncardinal.mx)
+
+#$D
+#[1] 0.7042488
+
+#$I
+#[1] 0.9105667
+
+#$rank.cor
+#[1] 0.6682921
+
+#A new feature of the R version of ENMTools is that you can now use these same metrics in the n-dimensional space of all combinations of environmental variables, instead of restricting your measures of model similarity to those sets of conditions that appear in the training region. This is done by repeatedly drawing Latin hypercube samples from the space of all possible combinations of environmental variables given the min and max of each variable within the training region. ENMTools continues to draw samples until subsequent iterations differ by less than a specified tolerance value. Lower tolerance values result in more precise estimates of overlap, but can take much longer to calculate.
+
+env.overlap(pyrrhuloxia.mx, northerncardinal.mx, env, tolerance = .001)
+# $env.D
+# [1] 0.6348623
+
+# $env.I
+# [1] 0.875268
+
+# $env.cor
+# [1] 0.229557
+
+
+
+# Hypothesis testing!!!!
+id.mx <- identity.test(species.1 = pyrrhuloxia, species.2 = northerncardinal, env = env, type = "mx", nreps = 4)
+
+Output:
+Identity test Pyrrhuloxia vs. Northern Cardinal
+
+Identity test p-values:
+       D        I rank.cor    env.D    env.I  env.cor
+     0.2      0.2      0.2      0.2      0.2      0.2
+
+
+Replicates:
+
+
+|          |         D|         I|  rank.cor|     env.D|     env.I|   env.cor|
+|:---------|---------:|---------:|---------:|---------:|---------:|---------:|
+|empirical | 0.7033727| 0.8983160| 0.5765005| 0.7443878| 0.9184600| 0.4537243|
+|rep 1     | 0.8925897| 0.9883105| 0.9437220| 0.8799294| 0.9772001| 0.8875668|
+|rep 2     | 0.8937907| 0.9881668| 0.9448609| 0.8548878| 0.9784592| 0.8876052|
+|rep 3     | 0.8804871| 0.9823457| 0.9146624| 0.8736014| 0.9794535| 0.8808552|
+|rep 4     | 0.8743817| 0.9826914| 0.9466722| 0.8562709| 0.9748965| 0.9315062|
+
+
+
+
+# Background or similarity test
+pyrrnoca.mx.asym.pts <- background.test(species.1 = pyrrhuloxia, species.2 = northerncardinal, env = env, type = "mx", nreps = 1, test.type = "asymmetric")
+# doesn't work
+
+
+esp.sym.id <- enmtools.ecospat.id(pyrrhuloxia, northerncardinal, env, test.type = symmetric)
+esp.asym.pn.id <- enmtools.ecospat.id(pyrrhuloxia, northerncardinal, env, test.type = asymmetric)
+esp.asym.np.id <- enmtools.ecospat.id(pyrrhuloxia, northerncardinal, env, test.type = asymmetric)
+
+
+rbl.mx <- rangebreak.linear(pyrrhuloxia, northerncardinal, env, type = "mx", nreps = 4)
+rbb.mx <- rangebreak.blob(pyrrhuloxia, northerncardinal, env, type = "mx", nreps = 4)
+
+library(help="ENMTools")
