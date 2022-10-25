@@ -33,7 +33,7 @@ ext <- extent(-114.8, -109.0, 31.3, 37.0)
 
 # process reference file
 
-assign(paste0("reference_", "raw"), raster('nlcd_continuous_clipped_r3_12.tif'))
+assign(paste0("reference_", "raw"), raster('tifs/nlcd_continuous_clipped_r3_12.tif'))
 
 reference_projected <- projectRaster(reference_raw, crs=projection)
 
