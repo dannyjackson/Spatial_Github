@@ -1,0 +1,473 @@
+# IN BASH BEFORE OPENING R
+# export TMPDIR=/Volumes/IcterOS/R_temp
+
+
+library(ENMTools)
+library(dismo)
+library(rgbif)
+install.extras()
+
+
+
+#env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/formaxent/files",full.names=TRUE)
+
+#env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/PhoenixLayer/formaxent/files",full.names=TRUE)
+
+#env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/ArizonaLayer/formaxent/files",full.names=TRUE)
+
+
+# TUCSON
+
+setwd("/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/")
+
+clim.env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/formaxent/files/ClimateFiles",full.names=TRUE)
+
+clim.env<-stack(clim.env.files)
+
+names(clim.env)<-c("Clim1.tif", "Clim10.tif", "Clim11.tif", "Clim12.tif", "Clim13.tif", "Clim14.tif", "Clim15.tif", "Clim16.tif", "Clim17.tif", "Clim18.tif", "Clim19.tif", "Clim2.tif", "Clim3.tif", "Clim4.tif", "Clim5.tif", "Clim6.tif", "Clim7.tif", "Clim8.tif", "Clim9.tif")
+
+
+# DealwithNAseitherbypropogatingthemtoallotherlayers,orbyturningthemallto0
+
+#propogatemethod
+#env<-check.env(env)
+
+#0method
+
+numbers<-c(1:19)
+for(item in numbers)
+{
+clim.env[[item]][is.na(clim.env[[item]])]<-0
+}
+
+correlations<-raster.cor.matrix(clim.env)
+write.csv(correlations,"correlations_tuc_clim.csv")
+plot<-raster.cor.plot(clim.env)
+
+pdf(file="corr_plot_tuc_clim.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+clim.pca <- raster.pca(clim.env, 3)
+
+
+
+
+
+dev.env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/formaxent/files/DevelopmentFiles",full.names=TRUE)
+
+
+dev.env<-stack(dev.env.files)
+
+names(dev.env)<-c("nlcd_21.tif", "nlcd_22.tif", "nlcd_23.tif", "nlcd_24.tif")
+
+
+# DealwithNAseitherbypropogatingthemtoallotherlayers,orbyturningthemallto0
+
+#propogatemethod
+#env<-check.env(env)
+
+#0method
+
+numbers<-c(1:4)
+for(item in numbers)
+{
+dev.env[[item]][is.na(dev.env[[item]])]<-0
+}
+
+correlations<-raster.cor.matrix(dev.env)
+write.csv(correlations,"correlations_tuc_dev.csv")
+plot<-raster.cor.plot(dev.env)
+
+pdf(file="corr_plot_tuc_dev.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+dev.pca <- raster.pca(dev.env, 2)
+
+
+
+env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/formaxent/files/OtherFiles",full.names=TRUE)
+
+other.env<-stack(env.files)
+
+names(other.env)<-c("Elev.tif", "MedianHouseholdIncome.tif", "nlcd_11.tif", "nlcd_31.tif", "nlcd_41.tif", "nlcd_42.tif", "nlcd_43.tif", "nlcd_52.tif", "nlcd_71.tif", "nlcd_81.tif", "nlcd_82.tif", "nlcd_90.tif")
+
+
+numbers<-c(1:12)
+for(item in numbers)
+{
+other.env[[item]][is.na(other.env[[item]])]<-0
+}
+
+
+
+
+correlations<-raster.cor.matrix(other.env)
+write.csv(correlations,"correlations_tuc_other.csv")
+plot<-raster.cor.plot(env)
+
+pdf(file="corr_plot_tuc_other.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+
+env <- raster::stack(other.env, clim.pca$rasters, dev.pca$rasters)
+
+names(env)<-c("Elev", "MedianHouseholdIncome", "nlcd_11", "nlcd_31", "nlcd_41", "nlcd_42", "nlcd_43", "nlcd_52", "nlcd_71", "nlcd_81", "nlcd_82", "nlcd_90", "Clim_PC1", "Clim_PC2", "Clim_PC3", "Dev_PC1", "Dev_PC2")
+
+# Drop NLCD_43, Clim_PC1, and NLCD_31
+
+env <- dropLayer(env, c("Clim_PC1", "nlcd_43", "nlcd_31"))
+
+correlations<-raster.cor.matrix(env)
+write.csv(correlations,"correlations_tuc_all.csv")
+plot<-raster.cor.plot(env)
+
+pdf(file="corr_plot_tuc_all.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+# make bird species objects that have colnames(spp)  <- c("species", "lat", "lon")
+
+birds <- read.csv("/Volumes/BackupPlus/GIS_files/December2021/Birds/NOCAandPYRR_eBirdandTBCandCAPLTER_04_05_2017to2021.csv")
+
+keep.cols <- c("species", "decimalLatitude", "decimalLongitude")
+colnames(birds)  <- c("species", "lat", "lon")
+
+noca <- subset(birds, species == "Northern Cardinal")
+pyrr <- subset(birds, species == "Pyrrhuloxia")
+
+
+pyrr <- as.data.frame(unique(pyrr))
+pyrr <- pyrr[complete.cases(pyrr),]
+colnames(pyrr)  <- c("species", "lat", "lon")
+
+
+noca <- as.data.frame(unique(noca))
+noca <- noca[complete.cases(noca),]
+colnames(noca)  <- c("species", "lat", "lon")
+
+
+
+# Okay, let's turn both of these into enmtools.species objects
+crs(env) <- "+proj=longlat +datum=WGS84 +no_defs"
+
+pyrrhuloxia <- enmtools.species()
+pyrrhuloxia$presence.points <- pyrr[,c("lon", "lat")]
+pyrrhuloxia$species.name <- "Pyrrhuloxia"
+pyrrhuloxia$range <- background.raster.buffer(pyrrhuloxia$presence.points, 50000, mask = env)
+
+pyrrhuloxia <- enmtools.species()
+pyrrhuloxia$presence.points <- pyrr[,c("lon", "lat")]
+pyrrhuloxia$species.name <- "Pyrrhuloxia"
+pyrrhuloxia$range <- background.raster.buffer(pyrrhuloxia$presence.points, 50000, mask = env)
+
+northerncardinal <- enmtools.species()
+northerncardinal$presence.points <- pyrr[,c("lon", "lat")]
+northerncardinal$species.name <- "northerncardinal"
+northerncardinal$range <- background.raster.buffer(northerncardinal$presence.points, 50000, mask = env)
+
+
+pyrrhuloxia <- check.species(pyrrhuloxia)
+northerncardinal <- check.species(northerncardinal)
+
+
+pyrrhuloxia.maxent <- enmtools.maxent(pyrrhuloxia, env, test.prop = 0.25)
+
+northerncardinal.maxent <- enmtools.maxent(northerncardinal, env, test.prop = 0.25)
+
+
+pyrrhuloxia.maxent
+northerncardinal.maxent
+
+
+# Okay, now let's look at breadth of species ENMs in geographic space.
+
+raster.breadth(pyrrhuloxia.maxent)
+raster.breadth(northerncardinal.maxent)
+
+
+# How about in environment space?
+
+env.breadth(pyrrhuloxia.maxent, env)
+env.breadth(northerncardinal.maxent, env)
+
+
+raster.overlap(pyrrhuloxia.maxent, northerncardinal.maxent)
+env.overlap(pyrrhuloxia.maxent, northerncardinal.maxent, env)
+
+
+
+# Identity test
+
+id.maxent <- identity.test(pyrrhuloxia, northerncardinal, env, type = "mx", nreps = 20, nback = 100, low.memory=TRUE)
+id.maxent
+
+
+
+# Background test
+
+bg.glm <- background.test(monticola, cyreni, spain.worldclim, type = "maxent", f = pres ~ poly(bio1, 4) + poly(bio8, 4), nreps = 20, nback = 100, test.type = "symmetric")
+bg.glm
+
+
+
+# PHOENIX
+library(ENMTools)
+library(dismo)
+library(rgbif)
+
+
+setwd("/Volumes/BackupPlus/GIS_files/May2022/FromAgave/PhoenixLayer/")
+
+clim.env.files <- list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/PhoenixLayer/formaxent/files/ClimateFiles",full.names=TRUE)
+
+
+clim.env <- stack(clim.env.files)
+
+names(clim.env)<-c("Clim1.tif", "Clim10.tif", "Clim11.tif", "Clim12.tif", "Clim13.tif", "Clim14.tif", "Clim15.tif", "Clim16.tif", "Clim17.tif", "Clim18.tif", "Clim19.tif", "Clim2.tif", "Clim3.tif", "Clim4.tif", "Clim5.tif", "Clim6.tif", "Clim7.tif", "Clim8.tif", "Clim9.tif")
+
+
+# DealwithNAseitherbypropogatingthemtoallotherlayers,orbyturningthemallto0
+
+#propogatemethod
+#env<-check.env(env)
+
+#0method
+
+numbers<-c(1:19)
+for(item in numbers)
+{
+clim.env[[item]][is.na(clim.env[[item]])]<-0
+}
+
+correlations<-raster.cor.matrix(clim.env)
+write.csv(correlations,"correlations_phx_clim.csv")
+plot<-raster.cor.plot(clim.env)
+
+pdf(file="corr_plot_phx_clim.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+clim.pca <- raster.pca(clim.env, 3)
+
+
+
+
+
+dev.env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/PhoenixLayer/formaxent/files/DevelopmentFiles",full.names=TRUE)
+
+
+dev.env<-stack(dev.env.files)
+
+names(dev.env)<-c("nlcd_21.tif", "nlcd_22.tif", "nlcd_23.tif", "nlcd_24.tif")
+
+
+# DealwithNAseitherbypropogatingthemtoallotherlayers,orbyturningthemallto0
+
+#propogatemethod
+#env<-check.env(env)
+
+#0method
+
+numbers<-c(1:4)
+for(item in numbers)
+{
+dev.env[[item]][is.na(dev.env[[item]])]<-0
+}
+
+correlations<-raster.cor.matrix(dev.env)
+write.csv(correlations,"correlations_phx_dev.csv")
+plot<-raster.cor.plot(dev.env)
+
+pdf(file="corr_plot_phx_dev.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+dev.pca <- raster.pca(dev.env, 2)
+
+
+
+env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/PhoenixLayer/formaxent/files/OtherFiles",full.names=TRUE)
+
+other.env<-stack(env.files)
+
+names(other.env)<-c("Elev.tif", "MedianHouseholdIncome.tif", "nlcd_11.tif", "nlcd_31.tif", "nlcd_41.tif", "nlcd_42.tif", "nlcd_43.tif", "nlcd_52.tif", "nlcd_71.tif", "nlcd_81.tif", "nlcd_82.tif", "nlcd_90.tif")
+
+
+numbers<-c(1:12)
+for(item in numbers)
+{
+other.env[[item]][is.na(other.env[[item]])]<-0
+}
+
+
+
+
+correlations<-raster.cor.matrix(other.env)
+write.csv(correlations,"correlations_phx_other.csv")
+plot<-raster.cor.plot(env)
+
+pdf(file="corr_plot_phx_other.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+
+env <- raster::stack(other.env, clim.pca$rasters, dev.pca$rasters)
+
+names(env)<-c("Elev", "MedianHouseholdIncome", "nlcd_11", "nlcd_31", "nlcd_41", "nlcd_42", "nlcd_43", "nlcd_52", "nlcd_71", "nlcd_81", "nlcd_82", "nlcd_90", "Clim_PC1", "Clim_PC2", "Clim_PC3", "Dev_PC1", "Dev_PC2")
+
+# Drop NLCD_43, Clim_PC1, NLCD_82
+
+env <- dropLayer(env, c("Clim_PC1", "nlcd_43", "nlcd_82"))
+
+correlations<-raster.cor.matrix(env)
+write.csv(correlations,"correlations_phx_all.csv")
+plot<-raster.cor.plot(env)
+
+pdf(file="corr_plot_phx_all.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ARIZONA
+library(ENMTools)
+library(dismo)
+library(rgbif)
+
+
+setwd("/Volumes/BackupPlus/GIS_files/May2022/FromAgave/ArizonaLayer/")
+
+clim.env.files <- list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/Tifs/asks/ClimateFiles",full.names=TRUE)
+
+
+clim.env <- stack(clim.env.files)
+
+names(clim.env)<-c("Clim1.tif", "Clim10.tif", "Clim11.tif", "Clim12.tif", "Clim13.tif", "Clim14.tif", "Clim15.tif", "Clim16.tif", "Clim17.tif", "Clim18.tif", "Clim19.tif", "Clim2.tif", "Clim3.tif", "Clim4.tif", "Clim5.tif", "Clim6.tif", "Clim7.tif", "Clim8.tif", "Clim9.tif")
+
+
+# DealwithNAseitherbypropogatingthemtoallotherlayers,orbyturningthemallto0
+
+#propogatemethod
+#env<-check.env(env)
+
+#0method
+
+numbers<-c(1:19)
+for(item in numbers)
+{
+clim.env[[item]][is.na(clim.env[[item]])]<-0
+}
+
+correlations<-raster.cor.matrix(clim.env)
+write.csv(correlations,"correlations_phx_clim.csv")
+plot<-raster.cor.plot(clim.env)
+
+pdf(file="corr_plot_phx_clim.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+clim.pca <- raster.pca(clim.env, 3)
+
+
+
+
+
+dev.env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/PhoenixLayer/formaxent/files/DevelopmentFiles",full.names=TRUE)
+
+
+dev.env<-stack(dev.env.files)
+
+names(dev.env)<-c("nlcd_21.tif", "nlcd_22.tif", "nlcd_23.tif", "nlcd_24.tif")
+
+
+# DealwithNAseitherbypropogatingthemtoallotherlayers,orbyturningthemallto0
+
+#propogatemethod
+#env<-check.env(env)
+
+#0method
+
+numbers<-c(1:4)
+for(item in numbers)
+{
+dev.env[[item]][is.na(dev.env[[item]])]<-0
+}
+
+correlations<-raster.cor.matrix(dev.env)
+write.csv(correlations,"correlations_phx_dev.csv")
+plot<-raster.cor.plot(dev.env)
+
+pdf(file="corr_plot_phx_dev.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+dev.pca <- raster.pca(dev.env, 2)
+
+
+
+env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/PhoenixLayer/formaxent/files/OtherFiles",full.names=TRUE)
+
+other.env<-stack(env.files)
+
+names(other.env)<-c("Elev.tif", "MedianHouseholdIncome.tif", "nlcd_11.tif", "nlcd_31.tif", "nlcd_41.tif", "nlcd_42.tif", "nlcd_43.tif", "nlcd_52.tif", "nlcd_71.tif", "nlcd_81.tif", "nlcd_82.tif", "nlcd_90.tif")
+
+
+numbers<-c(1:12)
+for(item in numbers)
+{
+other.env[[item]][is.na(other.env[[item]])]<-0
+}
+
+
+
+
+correlations<-raster.cor.matrix(other.env)
+write.csv(correlations,"correlations_phx_other.csv")
+plot<-raster.cor.plot(env)
+
+pdf(file="corr_plot_phx_other.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()
+
+
+
+env <- raster::stack(other.env, clim.pca$rasters, dev.pca$rasters)
+
+names(env)<-c("Elev", "MedianHouseholdIncome", "nlcd_11", "nlcd_31", "nlcd_41", "nlcd_42", "nlcd_43", "nlcd_52", "nlcd_71", "nlcd_81", "nlcd_82", "nlcd_90", "Clim_PC1", "Clim_PC2", "Clim_PC3", "Dev_PC1", "Dev_PC2")
+
+# Drop NLCD_43, Clim_PC1, NLCD_82
+
+env <- dropLayer(env, c("Clim_PC1", "nlcd_43", "nlcd_82"))
+
+correlations<-raster.cor.matrix(env)
+write.csv(correlations,"correlations_phx_all.csv")
+plot<-raster.cor.plot(env)
+
+pdf(file="corr_plot_phx_all.pdf",width=10,height=10,useDingbats=FALSE)
+plot
+dev.off()

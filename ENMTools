@@ -8,9 +8,9 @@ utils::download.file(url = "https://raw.githubusercontent.com/mrmaxent/Maxent/ma
 library(ENMTools)
 library(dismo)
 
-env.files <- list.files(path = "/Volumes/BackupPlus/GIS_files/TucsonEnvironmentalLayers/forMaxent_noNA_tucson/Not_resampled/", full.names = TRUE)
+env.files <- list.files(path = "/home/dnjacks4/Tucson/", full.names = TRUE)
 env <- stack(env.files)
-names(env) <- c("N11", "N21", "N22", "N23", "N24", "N31", "N41", "N42", "N43", "N52", "N71", "N81", "N82", "N90", "N95", "C1", "C10", "C11", "C12", "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "elev", "land", "Land", "Tmax3", "Tmax4", "Tmax5")
+names(env) <- c("N11", "N21", "N22", "N23", "N24", "N31", "N41", "N42", "N43", "N52", "N71", "N81", "N82", "N90", "N95", "C1", "C10", "C11", "C12", "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "elev", "Tmax3", "Tmax4", "Tmax5")
 env <- setMinMax(env)
 #plot(env[[1]])
 #env <- check.env(env)

@@ -1,0 +1,88 @@
+#Setting up on Agave server
+
+ssh -Y dnjacks4@agave.asu.edu
+
+mkdir Birds programs
+
+# Copied env files and bird files to
+scp /Volumes/BackupPlus/GIS_files/Birds/ebird_pyrr_AprMay_2016_2021_latlong_new.csv dnjacks4@agave.asu.edu:/home/dnjacks4/Birds
+
+scp Downloads/ENMTools-master.zip dnjacks4@agave.asu.edu:/home/dnjacks4/
+
+# Added this line to ./bashrc
+export PATH=$PATH:/home/dnjacks4/programs/
+
+# To install ENMTools, you need an updated R version, SQLite, proj 6, and gdal. All of those currently are installed in the root but are old af
+
+# I installed R by downloading the tar.gz file, using scp to put it on the server, tar -xf followed by ./compile && make
+# mv R /home/dnjacks4/programs/R_new
+
+# Installing SQLite locally
+# downloaded the tar.gz file then uploaded it to the server with scp
+# https://www.sqlite.org/download.html
+# tar -xf SQLite.file
+# cd SQLite directory
+# ./compile
+# make
+# cp SQLite to /home/dnjacks4/programs/
+
+# Installing Proj 6 locally
+# The main issue was that even with SQLite installed locally, proj still called the version from the root which was outdated
+
+# Tried this, didn't change anything
+# export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/dnjacks4/programs/
+
+# Tried adding this to .bashrc, didn't change anything
+# PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:/home/dnjacks4/programs/
+
+# This almost worked?
+./configure --prefix=/home/dnjacks4/programs SQLITE3_CFLAGS="-I/home/dnjacks4/programs/include" SQLITE3_LIBS="-L/home/dnjacks4/programs/sqlite-autoconf-3370000/.lib -lsqlite3" CPPFLAGS=-I/home/dnjacks4/programs/include LDFLAGS="-L/home/dnjacks4/programs/sqlite-autoconf-3370000/.lib -lsqlite3"
+
+./configure --prefix=/home/dnjacks4/programs SQLITE3_CFLAGS="-I$sqliteDir/include"
+SQLITE3_LIBS="-L$sqliteDir/lib -lsqlite3"
+
+# Installing gdal
+cd gdal
+./configure --prefix=/path/to/install/prefix [options]
+make
+make install
+export PATH=/path/to/install/prefix/bin:$PATH
+export LD_LIBRARY_PATH=/path/to/install/prefix/lib:$LD_LIBRARY_PATH
+export GDAL_DATA=/path/to/install/prefix/share/gdal
+Test
+gdalinfo --version
+
+module -l avail
+module load r/4.1.0
+module load gdal/3.0.4
+module load sqlite/3.25
+module load proj/6.3.1
+module load proj4/4.9.3
+SQLite, proj 6,
+
+raster’, ‘dismo’, ‘rgeos’, ‘knitr’, ‘ggplot2’, ‘lhs’, ‘magrittr’, ‘ENMeval’, ‘sp’, ‘spatstat.geom’, ‘spatstat.core’, ‘spatstat’, ‘ggpubr’, ‘rgdal’, ‘forcats’ are not available for package ‘ENMTools’
+
+
+install.packages('ENMTools',lib='/home/dnjacks4/programs/rpackages')
+
+install.packages('raster',lib='/home/dnjacks4/programs/rpackages')
+install.packages('dismo',lib='/home/dnjacks4/programs/rpackages')
+install.packages('ENMeval',lib='/home/dnjacks4/programs/rpackages')
+install.packages('rJava',lib='/home/dnjacks4/programs/rpackages')
+
+#these didn't install
+install.packages('rgeos',lib='/home/dnjacks4/programs/rpackages')
+install.packages('rgdal',lib='/home/dnjacks4/programs/rpackages')
+
+install.extras(lib='/home/dnjacks4/programs/rpackages/')
+library(dismo,lib='/home/dnjacks4/programs/rpackages/')
+library(raster,lib='/home/dnjacks4/programs/rpackages/')
+library(ENMeval,lib='/home/dnjacks4/programs/rpackages/')
+library(rJava,lib='/home/dnjacks4/programs/rpackages/')
+library(ENMTools,lib='/home/dnjacks4/programs/rpackages/')
+
+
+I tried starting with
+interactive -mem=100G
+
+but it quit on me with a java heapspace error. I think i should request more.

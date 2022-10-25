@@ -1,0 +1,15 @@
+Algorithm for testing species niche differences
+
+1. Obtain the dataset
+2. Filter the dataset
+    A. Select only one observation of each species per grid cell in the model
+        I. When permuting the data, I should permute before selecting an observation per grid cell
+    B. Remove correlated environmental layers
+3. Testing differences in extent
+    A. In ENMTools, I can test IF there is a significant difference in extent
+      https://github.com/danlwarren/ENMTools-Tutorials/blob/master/Hypothesis%20testing%20for%20species%20pairs.Rmd
+
+      https://github.com/danlwarren/ENMTools/blob/master/Readme.md
+    B. But to test where there is a difference (because we hypothesize that there isn't a difference across the overall range but only in the city), I need to write an algorithm to solve this
+    See file RangeTesting.sh and accompanying files 
+4. Testing differences in predictive variables

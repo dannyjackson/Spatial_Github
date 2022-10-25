@@ -1,0 +1,146 @@
+# based on this tutorial
+# https://gis.stackexchange.com/questions/360516/measure-shortest-distance-between-raster-cell-to-raster-cell-of-another-raster-i
+
+interactive --mem=100G -t 1-0
+
+module load r/4.1.0
+module load gdal/3.0.4
+module load sqlite/3.25
+module load proj/6.3.1
+module load proj4/4.9.3
+
+R
+
+# install.packages('raster', lib='/home/dnjacks4/R/')
+# install.packages('rgdal', lib='/home/dnjacks4/R/')
+# install.packages('FNN', lib='/home/dnjacks4/R/')
+# install.packages('leaflet', lib='/home/dnjacks4/R/')
+# install.packages('R6', lib='/home/dnjacks4/R/')
+
+library(raster, lib='/home/dnjacks4/R/')
+library(rgdal)
+library(FNN, lib='/home/dnjacks4/R/')
+library(leaflet, lib='/home/dnjacks4/R/')
+library(R6, lib='/home/dnjacks4/R/')
+
+nlcd <- raster("nlcd_2019_land_cover_l48_20210604/nlcd_2019_land_cover_l48_20210604.img")
+#nlcd <- raster("FilesToAgave/nlcd_2016_treecanopy_2019_08_31/nlcd_2016_treecanopy_2019_08_31.img")
+
+vector <- readOGR('FilesToAgave/Arizona/Arizona.shp')
+# crs(vector) <- "+proj=longlat +datum=WGS84 +no_defs"
+vector_w84 <- spTransform(vector, crs(nlcd))
+
+r2 <- crop(nlcd, extent(vector_w84))
+r3 <- mask(r2, vector_w84)
+nlcd_az <- mask(nlcd, vector)
+
+r2 <- ratify(r2)
+# raster::writeRaster(r2, filename="nlcd_az_r2", format="GTiff", overwrite=TRUE)
+raster::writeRaster(r3, filename="nlcd_az_canopy_r3", format="GTiff", overwrite=TRUE)
+# raster::writeRaster(nlcd_az, filename="nlcd_az.tif", format="GTiff")
+
+
+
+nlcd_az <- raster("nlcd_az.tif")
+nlcd_az <- raster("nlcd_az_canopy_r3.tif")
+
+list <- list(11)
+
+# nlcd land cover
+for (x in list) {
+  print(x)
+  y <- reclassify(nlcd_az, cbind(-Inf, x-1, NA), right=TRUE)
+  y <- reclassify(y, cbind(x, Inf, NA), right=TRUE)
+  y <- ratify(y)
+  writeRaster(y, filename=paste0("nlcd_az_", x), format="GTiff", overwrite=TRUE)
+
+  }
+
+
+
+
+# process nlcd to create layer files
+
+list <- list(11, 12, 21, 22, 23, 24, 31, 41, 42, 43, 52, 71, 81, 82, 90, 95)
+
+for (x in list) {
+  print(x)
+  r2 <- raster(paste0("nlcd_az_", x, ".tif"))
+  r1 <- reclassify(nlcd_az, cbind(-Inf, Inf, 0), right=TRUE)
+
+  p1 = as.data.frame(r1,xy=TRUE)
+  p1 = p1[!is.na(p1[,3]),1:2]
+
+  p2 = as.data.frame(r2, xy=TRUE)
+  p2 = p2[!is.na(p2[,3]),1:2]
+
+  dnear = knnx.dist(p2, p1, k=1)
+  r1[!is.na(r1)] = dnear[,1]
+  writeRaster(r1, filename=paste0("nlcd_continuous_", x), format="GTiff", overwrite=TRUE)
+  }
+
+for (x in list) {
+  print(x)
+  nlcd <- raster(paste0("nlcd_continuous_", x, ".tif"))
+  vector <- readOGR('Arizona/Arizona.shp')
+  vector_w84 <- spTransform(vector, crs(nlcd))
+
+  r2 <- crop(nlcd, extent(vector_w84))
+  r3 <- mask(r2, vector_w84)
+  nlcd_az <- mask(nlcd, vector)
+
+  r2 <- ratify(r2)
+  raster::writeRaster(r2, filename=paste0("nlcd_continuous_clipped_r2_", x), format="GTiff", overwrite=TRUE)
+  raster::writeRaster(r3, filename=paste0("nlcd_continuous_clipped_r3_", x), format="GTiff", overwrite=TRUE)
+  # raster::writeRaster(nlcd_az, filename="nlcd_az.tif", format="GTiff")
+  }
+
+
+
+
+# create a null file
+r1 <- y
+r2 <- reclassify(y, cbind(-Inf, Inf, 0), right=TRUE)
+
+p1 = as.data.frame(r1,xy=TRUE)
+p1 = p1[!is.na(p1[,3]),1:2]
+
+p2 = as.data.frame(r2, xy=TRUE)
+p2 = p2[!is.na(p2[,3]),1:2]
+
+dnear = knn.dist(p2, p1, k=1)
+r1[!is.na(r1)] = dnear[,1]
+
+
+# Canopy analysis
+nlcd_az <- raster("nlcd_az_canopy_r3.tif")
+
+# nlcd canopy cover
+y <- reclassify(nlcd_az, cbind(-Inf, 0, NA), right=TRUE)
+y <- reclassify(y, cbind(255, Inf, NA), right=TRUE)
+y <- ratify(y)
+writeRaster(y, filename=paste0("nlcd_az_canopy_NAs"), format="GTiff", overwrite=TRUE)
+
+
+r2 <- raster("nlcd_az_canopy_NAs.tif")
+r1 <- reclassify(r2, cbind(-Inf, Inf, 0), right=TRUE)
+
+p1 = as.data.frame(r1,xy=TRUE)
+p1 = p1[is.na(p1[,3]),1:2]
+
+p2 = as.data.frame(r2, xy=TRUE)
+p2 = p2[!is.na(p2[,3]),1:2]
+
+r3 <-r2
+
+dnear = knnx.dist(p2, p1, k=1)
+r2[is.na(r2)] = dnear[,1]
+
+dnear2 = knnx.dist(p1, p2, k=1)
+r3[is.na(r3)] = dnear[,1]
+
+writeRaster(r2, filename=paste0("nlcd_canopy_continuous_r2"), format="GTiff", overwrite=TRUE)
+writeRaster(r3, filename=paste0("nlcd_canopy_continuous_r3"), format="GTiff", overwrite=TRUE)
+
+
+writeRaster(r1, filename=paste0("nlcd_continuous_canopy"), format="GTiff", overwrite=TRUE)

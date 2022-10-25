@@ -1,0 +1,15 @@
+import pandas as pd
+import utm
+df = pd.read_csv("NOCAandPYRR_TBCdata_TucsonAudubon_04_05.csv")
+
+
+Simply apply() and merge()
+
+def getUTMs(row):
+    tup = utm.to_latlon(row.iloc[0],row.iloc[1], 12, 'U')
+    return pd.Series(tup[:2])
+
+df[['lat','long']] = df[['Longitude','Latitude']].apply(getUTMs , axis=1)
+df.head()
+
+df.to_csv("NOCAandPYRR_TBC_04_05.csv")
