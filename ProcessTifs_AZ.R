@@ -10,20 +10,14 @@ module load proj4/4.9.3
 
 library(sf)
 library(sp)
-
 library(raster)
-
 library(rgdal)
-
 library(tidyverse)
-
 library(rgeos)
-
 library(scales)
-
 library(fasterize, lib='/home/dnjacks4/R/')
-
 library(maptools)
+library(parallel)
 
 # for statewide
 setwd("/home/dnjacks4/Tifs_FromBackupPlus/Tifs/")
@@ -84,7 +78,7 @@ rgdal::writeGDAL(as(r, "SpatialGridDataFrame"),
 
 fileNames <- Sys.glob("/home/dnjacks4/Tifs/tifs/*.tif")
 
-for (fileName in fileNames) {
+ScriptR = function(fileName){
 # looped over buffered files already prepped for maxent
 
   print(fileName)
@@ -139,3 +133,5 @@ for (fileName in fileNames) {
   rm(r_raster)
   rm(r)
 }
+
+mclapply(fileNames, ScriptR, mc.set.seed=FALSE)
