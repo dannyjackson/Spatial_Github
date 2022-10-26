@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 # Uses this tutorial https://www.azavea.com/blog/2018/10/09/preparing-data-for-maxent-species-distribution-modeling-using-r/
 
-module purge
 module load r/4.1.0
 module load gdal/3.0.4
 module load sqlite/3.25
