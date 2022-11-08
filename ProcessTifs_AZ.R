@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 # Uses this tutorial https://www.azavea.com/blog/2018/10/09/preparing-data-for-maxent-species-distribution-modeling-using-r/
 
+require(devtools)
 library(sf)
 library(sp)
 library(raster)
@@ -13,7 +14,7 @@ library(maptools)
 library(parallel)
 
 # for statewide
-setwd("/home/dnjacks4/Tifs_FromBackupPlus/Tifs/")
+setwd("/home/dnjacks4/FilesToAgave/Tifs/")
 
 # set up projection parameter for use throughout script
 
@@ -26,7 +27,7 @@ ext <- extent(-114.8, -109.0, 31.3, 37.0)
 
 # process reference file
 
-assign(paste0("reference_", "raw"), raster('tifs/nlcd_continuous_clipped_r3_12.tif'))
+assign(paste0("reference_", "raw"), raster('tifs/nlcd_continuous_clipped_r3_11.tif'))
 
 reference_projected <- projectRaster(reference_raw, crs=projection)
 
@@ -69,7 +70,9 @@ rgdal::writeGDAL(as(r, "SpatialGridDataFrame"),
 
 # now repeat for all nonreference files
 
-fileNames <- Sys.glob("/home/dnjacks4/Tifs/tifs/*.tif")
+fileNames <- Sys.glob("/home/dnjacks4/FilesToAgave/Tifs/tifs/*.tif")
+# fileNames <- Sys.glob("tifs/*.tif")
+
 
 ScriptR = function(fileName){
 # looped over buffered files already prepped for maxent
