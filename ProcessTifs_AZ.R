@@ -7,7 +7,7 @@ install_version("rgdal", version = "1.4-8", repos = "http://cran.us.r-project.or
 library(sf)
 library(sp)
 library(raster)
-library(rgdal)
+library(rgdal, lib='/home/dnjacks4/R/')
 library(tidyverse)
 library(rgeos)
 library(scales)
@@ -15,6 +15,7 @@ library(fasterize, lib='/home/dnjacks4/R/')
 library(maptools)
 library(parallel)
 
+/home/dnjacks4/R/00LOCK-rgdal’
 # for statewide
 setwd("/home/dnjacks4/FilesToAgave/Tifs/")
 
