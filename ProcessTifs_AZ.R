@@ -2,6 +2,8 @@
 # Uses this tutorial https://www.azavea.com/blog/2018/10/09/preparing-data-for-maxent-species-distribution-modeling-using-r/
 
 require(devtools)
+install_version("rgdal", version = "1.4-8", repos = "http://cran.us.r-project.org", configure.args="--with-proj-share=/usr/share/proj/", lib='/home/dnjacks4/R/')
+
 library(sf)
 library(sp)
 library(raster)
