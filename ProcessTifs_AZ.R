@@ -13,7 +13,7 @@ library(fasterize, lib='/home/dnjacks4/R/')
 library(maptools)
 library(parallel)
 
-/home/dnjacks4/R/00LOCK-rgdal’
+
 # for statewide
 setwd("/home/dnjacks4/FilesToAgave/Tifs/")
 
