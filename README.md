@@ -49,7 +49,8 @@ Finally, to test for differences in the environmental variables associated with 
 
 # Results
 ## Figure 1
-<img width="883" alt="Screenshot 2023-05-01 at 11 14 03 AM" src="https://user-images.githubusercontent.com/49250788/235504210-6a646192-929d-4586-8502-2a6fc78a0396.png">
+<img width="889" alt="Screenshot 2023-05-01 at 7 37 05 PM" src="https://user-images.githubusercontent.com/49250788/235567661-b096864d-21cc-4174-958d-5fbe296446f1.png">
+
 
 While much of the ranges of the two species overlapped, their distributions differed in significant ways in both the statewide analysis and the analysis across Tucson. Northern cardinals had a higher probability of occurrence in the city of Tucson than pyrrhuloxia, and had a higher probability of occurrence in the regions north of Tucson in the statewide analysis. 
 
