@@ -7,7 +7,7 @@ Comparative ecological niche analysis of two congeners reveals differences in th
 
 # Abstract
 
-Human developments have altered ecosystems globally, and 
+Urbanization has altered ecosystems around the world, and will continue to do so over the next century. While avian responses to urbanization at the community level have been characterized in several studies, we lack comparative frameworks for understanding differences in spatial distributions in response to urbanization at the species level. We present a new method for testing differences in distribution between species using MaxENT. We then deploy that method to test for spatial differences between two congers, northern cardinals (Cardinalis cardinalis) and pyrrhuloxia (Cardinalis sinuatus) across the urban ecosystem of Tucson, Arizona and across the entire state of Arizona.
 
 # Introduction
 Urbanization has changed landscapes throughout the globe over the last two centuries, and these changes will continue to create extreme pressures on native species. Cities exhibit novel patterns of resource distributions, temperature gradients, and ecological communities alongside unique anthropogenic disturbances like noise pollution and concrete landscapes. Not all species respond similarly to these changes, with species expanding, contracting, or shifting their ranges after urbanization of a region. While we have some evidence that illustrates the broad mechanisms that drive species responses at the community level (Lerman et al. 2021, Warren et al. 2019), we lack an understanding of the more fine scale mechanisms that drive these patterns.
