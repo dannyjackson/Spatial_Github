@@ -1,19 +1,11 @@
 #!/usr/bin/env Rscript
 # Uses this tutorial https://www.azavea.com/blog/2018/10/09/preparing-data-for-maxent-species-distribution-modeling-using-r/
 
-
-
-
-require(devtools)
-library(sf)
 library(sp)
+library(terra)
 library(raster)
-library(rgdal, lib='/home/dnjacks4/R/')
-library(tidyverse)
-library(rgeos)
+library(rgdal)
 library(scales)
-library(fasterize, lib='/home/dnjacks4/R/')
-library(maptools)
 library(parallel)
 
 
@@ -31,7 +23,7 @@ ext <- extent(-114.8, -109.0, 31.3, 37.0)
 
 # process reference file
 
-assign(paste0("reference_", "raw"), raster('/home/dnjacks4/FilesToAgave/Tifs/tifs/nlcd_continuous_clipped_r3_11.tif'))
+assign(paste0("reference_", "raw"), raster('tifs/nlcd_continuous_clipped_r3_11.tif'))
 
 reference_projected <- projectRaster(reference_raw, crs=projection)
 

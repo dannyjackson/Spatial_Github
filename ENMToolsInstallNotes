@@ -1,0 +1,114 @@
+Install ENMTOols package on server
+
+
+
+export PROJ_LIB=/usr/local/proj-5.2.0/share/proj
+
+
+# Install Proj locally without root
+yum search proj
+
+proj.x86_64 : Cartographic projection software (PROJ.4)
+proj-devel.x86_64 : Development files for PROJ.4
+proj-epsg.x86_64 : EPSG dataset for PROJ.4
+proj-nad.x86_64 : US and Canadian datum shift grids for PROJ.4
+
+mkdir -p ~/rpm
+yumdownloader --destdir ~/rpm --resolve proj.x86_64
+yumdownloader --destdir ~/rpm --resolve proj-devel.x86_64
+yumdownloader --destdir ~/rpm --resolve proj-epsg.x86_64
+yumdownloader --destdir ~/rpm --resolve proj-nad.x86_64
+
+
+cd ~/epsg
+rpm2cpio ~/rpm/proj-4.8.0-4.el7.x86_64.rpm | cpio -id
+rpm2cpio ~/rpm/proj-devel-4.8.0-4.el7.x86_64.rpm | cpio -id
+rpm2cpio ~/rpm/proj-epsg-4.8.0-4.el7.x86_64.rpm | cpio -id
+rpm2cpio ~/rpm/proj-nad-4.8.0-4.el7.x86_64.rpm | cpio -id
+
+
+
+install.packages("terra", lib='/home/dnjacks4/R/', configure.args=c('--with-proj-include=/home/dnjacks4/epsg/usr/include','--with-proj-lib=/home/dnjacks4/epsg/usr/lib64', '--with-proj-share=/home/dnjacks4/epsg/usr/share'))
+
+export PROJ_LIB="/packages/7x/proj/6.3.1/"
+
+
+install.packages("terra", lib='/home/dnjacks4/R/', dependencies = TRUE, configure.args=c('--with-proj-include=/packages/7x/proj/7.2.1/include/','--with-proj-lib=/packages/7x/proj/7.2.1/build/lib/'))
+
+,'--with-proj-share=/packages/7x/proj/6.3.1/share'))
+
+install.packages("terra", lib='/home/dnjacks4/R/', dependencies = TRUE, configure.args="--with-proj-share=/packages/7x/proj/7.2.1/build/include/proj")
+
+configure.args=c('--with-proj-include=/packages/7x/proj/6.3.1/include','--with-proj-lib=/packages/7x/proj/6.3.1/lib','--with-proj-share=/packages/7x/proj/6.3.1/share')
+
+install.packages('https://cran.r-project.org/src/contrib/Archive/rgdal/rgdal_1.3-9.tar.gz',repos=NULL,type="source",
+
+configure.args=c('--with-proj-include=/software/apps/proj/5.1.0/include','--with-proj-lib=/software/apps/proj/5.1.0/lib','--with-proj-share=/software/apps/proj/5.1.0/share'))
+/usr/share/proj/epsg
+
+
+ /packages/7x/proj/7.2.1/build/include/proj
+
+
+ module load geos/3.9.2
+
+remotes::install_github("r-spatial/sf", configure.args="--with-proj-share=/usr/share/proj/", lib='/home/dnjacks4/R/')
+
+ require(devtools)
+ install_version("rgdal", version = "1.4-8", repos = "http://cran.us.r-project.org", configure.args="--with-proj-share=/usr/share/proj/", lib='/home/dnjacks4/R/')
+
+library(rgdal, lib='/home/dnjacks4/R/')
+#WARNING: no proj_defs.dat in PROJ.4 shared files
+
+
+
+
+export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:/packages/7x/proj/6.3.1/lib/pkgconfig/
+
+install.packages("sf", configure.args="
+--with-proj-include=/home/directory/local/proj_install/include
+--with-proj-lib=/home/directory/local/proj_install/lib
+--with-proj-data=/home/directory/local/proj_install/share/proj")
+
+
+
+
+install.packages("terra", lib='/home/dnjacks4/R/', configure.args=c('--with-proj-share=/usr/share/proj/', '--with-proj-include=/packages/7x/proj/6.3.1/include/'))
+
+library(terra, lib='/home/dnjacks4/R/')
+
+
+update.packages()
+
+remotes::install_github("danlwarren/ENMTools", dependencies = TRUE, configure.args=c('--with-proj-share=/usr/share/proj/', '--with-proj-include=/packages/7x/proj/6.3.1/include/'))
+
+
+install.packages("foreach", lib='/home/dnjacks4/R/', dependencies = TRUE, upgrade = always), configure.args=c('--with-proj-share=/usr/share/proj/', '--with-proj-include=/packages/7x/proj/6.3.1/include/'))
+
+foreach
+install.packages("ENMTools", lib='/home/dnjacks4/R/', dependencies = TRUE, configure.args=c('--with-proj-share=/usr/share/proj/', '--with-proj-include=/packages/7x/proj/6.3.1/include/'))
+
+
+install.packages("dismo", lib='/home/dnjacks4/R/', configure.args="--with-proj-share=/usr/share/proj/")
+
+install.packages("ENMTools", lib='/home/dnjacks4/R/', configure.args=c('--with-proj-share=/usr/share/proj/', '--with-proj-include=/packages/7x/proj/6.3.1/include/'))
+
+
+ # remotes::install_github("danlwarren/ENMTools", dependencies = TRUE, configure.args="--with-proj-share=/usr/share/proj/")
+
+ # install.packages("ENMTools", lib='/home/dnjacks4/R/', dependencies = TRUE, configure.args="--with-proj-share=/usr/share/proj/")
+
+
+ # none of the above worked
+
+ Trying conda instead
+
+conda create -y -n env_proj proj
+conda install -n env_proj -c conda-forge proj
+conda install -n env_proj -c conda-forge gdal
+conda install -n env_proj -c conda-forge R
+conda install -n env_proj -c conda-forge proj-data
+conda install -n env_proj -c conda-forge geos
+
+conda activate env_proj
+install.packages("terra", lib='/home/dnjacks4/R/')

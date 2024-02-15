@@ -17,34 +17,41 @@ R
 # install.packages('leaflet', lib='/home/dnjacks4/R/')
 # install.packages('R6', lib='/home/dnjacks4/R/')
 
-library(raster, lib='/home/dnjacks4/R/')
-library(rgdal)
+library(raster), lib='/home/dnjacks4/R/')
 library(FNN, lib='/home/dnjacks4/R/')
 library(leaflet, lib='/home/dnjacks4/R/')
 library(R6, lib='/home/dnjacks4/R/')
 
-nlcd <- raster("nlcd_2019_land_cover_l48_20210604/nlcd_2019_land_cover_l48_20210604.img")
+library(terra)
+library(raster)
+library(rgdal)
+
+nlcd <- raster("FilesToAgave/nlcd_2019_land_cover_l48_20210604.img")
 #nlcd <- raster("FilesToAgave/nlcd_2016_treecanopy_2019_08_31/nlcd_2016_treecanopy_2019_08_31.img")
 
 vector <- readOGR('FilesToAgave/Arizona/Arizona.shp')
 # crs(vector) <- "+proj=longlat +datum=WGS84 +no_defs"
 vector_w84 <- spTransform(vector, crs(nlcd))
 
-r2 <- crop(nlcd, extent(vector_w84))
-r3 <- mask(r2, vector_w84)
+# r2 <- crop(nlcd, extent(vector_w84))
+# r3 <- mask(r2, vector_w84)
 nlcd_az <- mask(nlcd, vector)
 
 r2 <- ratify(r2)
 # raster::writeRaster(r2, filename="nlcd_az_r2", format="GTiff", overwrite=TRUE)
-raster::writeRaster(r3, filename="nlcd_az_canopy_r3", format="GTiff", overwrite=TRUE)
-# raster::writeRaster(nlcd_az, filename="nlcd_az.tif", format="GTiff")
+raster::writeRaster(r3, filename="nlcd_az_r3", format="GTiff", overwrite=TRUE)
+raster::writeRaster(nlcd_az, filename="nlcd_az.tif", format="GTiff")
 
+writeRaster(nlcd_az, filename="nlcd_az.tif", format="GTiff")
 
+rgdal::writeGDAL(as(nlcd_az, "SpatialGridDataFrame"),
+ paste("nlcd_az.tif"),
+ drivername = "GTiff")
 
 nlcd_az <- raster("nlcd_az.tif")
 nlcd_az <- raster("nlcd_az_canopy_r3.tif")
 
-list <- list(11)
+list <- list(95)
 
 # nlcd land cover
 for (x in list) {
@@ -58,16 +65,20 @@ for (x in list) {
 
 
 
+nlcd_az <- raster("/scratch/dnjacks4/tifs/nlcd_az.tif")
+crs(nlcd_az) <- "+proj=longlat +datum=WGS84 +no_defs"
+
 
 # process nlcd to create layer files
 
 list <- list(11, 12, 21, 22, 23, 24, 31, 41, 42, 43, 52, 71, 81, 82, 90, 95)
 
+list <- list(95)
+
 for (x in list) {
   print(x)
   r2 <- raster(paste0("nlcd_az_", x, ".tif"))
   r1 <- reclassify(nlcd_az, cbind(-Inf, Inf, 0), right=TRUE)
-
   p1 = as.data.frame(r1,xy=TRUE)
   p1 = p1[!is.na(p1[,3]),1:2]
 

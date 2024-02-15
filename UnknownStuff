@@ -1,0 +1,97 @@
+
+
+
+module purge
+module load anaconda3/5.3.0
+
+conda create --name r_env r-essentials r-base
+conda activate r_env
+
+module load gdal/3.0.4
+module load sqlite/3.25
+
+module load geos/3.9.2
+
+conda install -c conda-forge r-rgdal
+#
+conda install -c conda-forge r-raster
+conda install -c conda-forge r-sf
+conda install -c conda-forge r-sp
+conda install -c conda-forge r-tidyverse
+conda install -c conda-forge r-rgeos
+conda install -c conda-forge r-scales
+conda install -c conda-forge r-fasterize
+conda install -c conda-forge r-maptools
+conda install -c conda-forge r-parallel
+
+library(sf)
+library(sp)
+library(raster), lib='/home/dnjacks4/R/')
+library(rgdal), lib='/home/dnjacks4/R/')
+library(tidyverse)
+library(rgeos)
+library(scales)
+library(fasterize, lib='/home/dnjacks4/R/')
+library(maptools)
+library(parallel)
+
+module load proj/6.3.1
+module load r/4.2.1-BLAS
+
+
+install.packages("raster"), lib='/home/dnjacks4/R/', configure.args=c('--with-proj-include=/home/dnjacks4/epsg/usr/include','--with-proj-lib=/home/dnjacks4/epsg/usr/lib64', '--with-proj-share=/home/dnjacks4/epsg/usr/share'))
+
+for (fileName in fileNames) {
+
+  print(fileName)
+
+  # process reference file
+  assign(paste0("raster_", "raw"), raster(paste0(fileName)))
+
+  raster_projected <- projectRaster(raster_raw, reference_tend, value=NA)
+
+  rm(raster_raw)
+
+  # create variable equal to final raster
+
+  assign(paste0("raster_final"), raster_projected)
+
+  print("Resampling")
+
+  # Resample all datasets across pixels of landcover file
+
+  # raster_final_re <- resample(raster_final, reference_tend)
+
+  # rm(raster_final)
+  rm(raster_projected)
+  print("Re-extending")
+
+  # Re-extend dataets to make sure that their shared extent was not influenced by the resampling
+
+  raster_tend <- extend(raster_final, ext, value=NA)
+
+  # arizona extent
+  e <- as(extent(-114.8, -109.0, 31.3, 37.0), 'SpatialPolygons')
+
+  # Arizona
+  crs(e) <- "+proj=longlat +datum=WGS84 +no_defs"
+  r <- crop(raster_tend, extent(e))
+
+  #Now all datasets are identical in extent, resolution, etc.
+
+  r[is.na(r[])] <- 0
+
+  #Write these environmental datasets out in .asc format
+
+  print("Writing to file")
+
+  rgdal::writeGDAL(as(r, "SpatialGridDataFrame"),
+   paste0(fileName,".asc"),
+   drivername = "AAIGrid")
+
+  print("Done")
+  rm(raster_final_re)
+  rm(raster_tend)
+  rm(r_raster)
+  rm(r)
+}

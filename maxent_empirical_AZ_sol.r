@@ -1,42 +1,27 @@
 #!/usr/bin/env Rscript
 # https://github.com/shandongfx/workshop_maxent_R/blob/master/code/Appendix1_case_study.md
 
+module purge
+module load r-4.2.2-gcc-11.2.0
+module load sqlite-3.38.5-gcc-11.2.0
+module load proj-8.2.1-gcc-11.2.0
+module load gdal-3.4.3-gcc-11.2.0
+module load geos-3.9.1-gcc-11.2.0
+module load  gcc-12.1.0-gcc-11.2.0
+module load libxc-5.1.7-gcc-12.1.0
+module load libvterm-0.1.4-gcc-11.2.0
+
 # running maxent through commandline without gui
 
-# person who is updating proj: ians@asu.edu
-
-# interactive --mem=50G -t 1-0
-
-
-module load r/4.2.1-BLAS
-module load gdal/3.0.4
-module load sqlite/3.25
-# module load proj4/4.9.3
-
-module load proj/6.3.1
-module load proj/7.2.1
-
-install.packages("rJava", lib='/home/dnjacks4/R/'),
-
-
-configure.args=c('--with-proj-share=/usr/share/proj/', '--with-proj-include=/packages/7x/proj/6.3.1/include/'))
-
-
-library("raster"), lib='/home/dnjacks4/R/')
-library("dismo", lib='/home/dnjacks4/R/')
-library("rgeos"), lib='/home/dnjacks4/R/')
-library("rJava", lib='/home/dnjacks4/R/')
-library("knitr", lib='/home/dnjacks4/R/')
+install.packages("rJava")
+library("raster")
+library("dismo")
+library("rgeos")
+library("rJava")
+library("knitr")
 library("ENMTools")
 
-library(devtools)
-install_github("danlwarren/ENMTools")
-library(ENMTools)
-
-setwd("/Volumes/GreyDrive/May2022/FromAgave/ArizonaLayer/MaxentEmpirical/")
-setwd("~/FilesToAgave/ArizonaLayer")
-
-# ~/Tifs_FromBackupPlus/Tifs
+setwd("/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/MaxentEmpirical/")
 
 knitr::opts_knit$set(root.dir = '/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/MaxentEmpirical/')
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
@@ -47,56 +32,12 @@ utils::download.file(url = "https://raw.githubusercontent.com/mrmaxent/Maxent/ma
 
 
 
-# all file PCA and correlation matrix
-names(all.env)<-c(
-
-"Clim1.tif"
-"Clim10.tif"
-"Clim11.tif" ***
-"Clim12.tif"
-"Clim13.tif" ***
-"Clim14.tif"
-"Clim15.tif" ***
-"Clim16.tif"
-"Clim17.tif" ***
-"Clim18.tif"
-"Clim19.tif" ***
-"Clim2.tif" ***
-"Clim3.tif"
-"Clim4.tif" ***
-"Clim5.tif"
-"Clim6.tif" ***
-"Clim7.tif"
-"Clim8.tif"***
-"Clim9.tif"
-"Elev"
-"MedianHouseholdIncome"
-
-"Elev.tif"
-"MedianHouseholdIncome.tif"
-"nlcd_11.tif"
-"nlcd_21.tif"
-"nlcd_22.tif"
-"nlcd_23.tif"
-"nlcd_24.tif"
-"nlcd_31.tif"
-"nlcd_41.tif"
-"nlcd_42.tif"
-"nlcd_43.tif"
-"nlcd_52.tif"
-"nlcd_71.tif"
-"nlcd_81.tif"
-"nlcd_82.tif"
-"nlcd_90.tif"
 
 
 
 
 
-
-# clim.env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/ArizonaLayer/scratch/asks",full.names=TRUE)
-
-clim.env.files<-list.files(path="/scratch/dnjacks4/asks",full.names=TRUE)
+clim.env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/formaxent/files/ClimateFiles",full.names=TRUE)
 
 clim.env<-stack(clim.env.files)
 
@@ -110,48 +51,25 @@ names(clim.env)<-c("Clim1.tif", "Clim10.tif", "Clim11.tif", "Clim12.tif", "Clim1
 
 #0method
 
-numbers <- c(1:19)
+numbers<-c(1:19)
 for(item in numbers)
 {
 clim.env[[item]][is.na(clim.env[[item]])]<-0
 }
 
-
-#parallelized
-numbers <- seq(1, 19)
-
-Scriptr = function(item){
-clim.env[[item]][is.na(clim.env[[item]])]<-0;
-};
-
-mclapply(numbers, ScriptR, mc.set.seed=FALSE)
-
 correlations<-raster.cor.matrix(clim.env)
-write.csv(correlations,"correlations_AZ_clim.csv")
+write.csv(correlations,"correlations_tuc_clim.csv")
 plot<-raster.cor.plot(clim.env)
 
-pdf(file="corr_plot_AZ_clim.pdf",width=10,height=10,useDingbats=FALSE)
+pdf(file="corr_plot_tuc_clim.pdf",width=10,height=10,useDingbats=FALSE)
 plot
 dev.off()
 
 
 clim.pca <- raster.pca(clim.env, 3)
 
-clim.pc1 <- subset(clim.pca$rasters, "PC1")
-clim.pc2 <- subset(clim.pca$rasters, "PC2")
-clim.pc3 <- subset(clim.pca$rasters, "PC3")
 
-rgdal::writeGDAL(as(clim.pc1, "SpatialGridDataFrame"),
- paste("Clim_PC1.asc"),
- drivername = "AAIGrid")
 
- rgdal::writeGDAL(as(clim.pc2, "SpatialGridDataFrame"),
-  paste("Clim_PC2.asc"),
-  drivername = "AAIGrid")
-
-  rgdal::writeGDAL(as(clim.pc3, "SpatialGridDataFrame"),
-   paste("Clim_PC3.asc"),
-   drivername = "AAIGrid")
 
 
 dev.env.files<-list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/formaxent/files/DevelopmentFiles",full.names=TRUE)

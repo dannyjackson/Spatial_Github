@@ -1,0 +1,53 @@
+module load gdal/3.0.4
+module load sqlite/3.25
+module load proj/6.3.1
+module load r/4.2.1-BLAS
+module load geos/3.9.2
+
+export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:/packages/7x/proj/6.3.1/lib/pkgconfig/
+
+R
+update.packages()
+
+
+require(devtools)
+# install_version("rgdal", version = "1.4-8", repos = "http://cran.us.r-project.org", configure.args="
+--with-proj-include=/home/directory/local/proj_install/include
+--with-proj-lib=/home/directory/local/proj_install/lib
+--with-proj-data=/home/directory/local/proj_install/share/proj", lib='/home/dnjacks4/R/')
+
+
+library(foreach)
+library(dismo)
+library(rgdal) #, lib='/home/dnjacks4/R/')
+library("rgeos")
+library(terra, lib='/home/dnjacks4/R/')
+library(ENMTools)
+library(parallel)
+
+setwd("~/FilesToAgave/ArizonaLayer")
+
+clim.env.files<-list.files(path="/scratch/dnjacks4/asks",full.names=TRUE)
+
+clim.env<-stack(clim.env.files)
+
+#parallelized
+numbers <- seq(1, 19)
+
+Scriptr = function(item){
+clim.env[[item]][is.na(clim.env[[item]])] <- 0;
+};
+
+
+mclapply(numbers, Scriptr, mc.set.seed=FALSE)
+
+clim.env<-check.env(clim.env)
+
+numbers<-c(1:19)
+for(item in numbers)
+{
+clim.env[[item]][is.na(clim.env[[item]])]<-0
+}
+
+dev.env.files<-list.files(path="/scratch/dnjacks4/asks/", pattern="nlcd_continuous_clipped_r3_2.*\\.asc$", full.names=TRUE)
+list.files(path="/scratch/dnjacks4/asks/", pattern="nlcd.*\\.asc$", full.names=TRUE)
