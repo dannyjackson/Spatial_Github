@@ -1,5 +1,3 @@
-#!/usr/bin/env Rscript
-# https://github.com/shandongfx/workshop_maxent_R/blob/master/code/Appendix1_case_study.md
 
 module purge
 module load r-4.2.2-gcc-11.2.0
@@ -35,7 +33,7 @@ utils::download.file(url = "https://raw.githubusercontent.com/mrmaxent/Maxent/ma
         "/maxent.jar"), mode = "wb")  ## wb for binary file, otherwise maxent.jar can not execute
 
 
-all.env.files<-list.files(path="/scratch/dnjacks4/asks/smaller/arizona/formaxent", pattern = "*.asc$", full.names=TRUE)
+all.env.files<-list.files(path="/scratch/dnjacks4/asks/smaller/arizona/formaxent", pattern = "*.asc.cropped.asc$", full.names=TRUE)
 
 e <- as(extent(-114.8, -109.044, 31.3356, 37.0), 'SpatialPolygons')
 
@@ -49,6 +47,10 @@ extent(x)
 
 env<-stack(all.env.files)
 
+correlations<-raster.cor.matrix(env)
+
+print("writing correlations matrix")
+write.csv(correlations,"correlations_AZ_all.csv")
 
 birds <- read.csv("~/FilesToAgave/Birds/NOCAandPYRR_eBirdandTBCandCAPLTER_04_05_2017to2021.csv")
 
@@ -154,47 +156,7 @@ pa <- c(rep(1, nrow(p)), rep(0, nrow(a)))
 pder <- as.data.frame(rbind(p, a))
 
 
-
-
-
-# train Maxent with spatial data
-# mod <- maxent(x=clim,p=occ_train)
-
-# train Maxent with tabular data
-mod_noca <- maxent(x=pder, ## env conditions
-              p=pa,   ## 1:presence or 0:absence
-
-              path=paste0("./output/maxent_outputs/noca"), ## folder for maxent output;
-              # if we do not specify a folder R will put the results in a temp file,
-              # and it gets messy to read those. . .
-              args=c("responsecurves") ## parameter specification
-              )
-# the maxent functions runs a model in the default settings. To change these parameters,
-# you have to tell it what you want...i.e. response curves or the type of features
-
-# view the maxent model in a html brower
-mod_noca
-
-# view detailed results
-mod_noca@results
-
-
-# example 1, project to study area [raster]
-noca <- predict(mod_noca, env)  # studyArea is the clipped rasters
-plot(noca)  # plot the continuous prediction
-
-rgdal::writeGDAL(as(noca, "SpatialGridDataFrame"),
- paste("noca.asc"),
- drivername = "AAIGrid")
-
-
-
-
-
-
-
-
-# for pyrrhuloxia
+##### pyrrhuloxia 
 
 pyrr_occ_raw <- subset(birds, species == "Pyrrhuloxia")
 
@@ -283,38 +245,83 @@ pder <- as.data.frame(rbind(p, a))
 
 
 
-# train Maxent with spatial data
-# mod <- maxent(x=clim,p=occ_train)
 
-# train Maxent with tabular data
-mod_pyrr <- maxent(x=pder, ## env conditions
-              p=pa,   ## 1:presence or 0:absence
+#######
 
-              path=paste0("./output/maxent_outputs/pyrr"), ## folder for maxent output;
-              # if we do not specify a folder R will put the results in a temp file,
-              # and it gets messy to read those. . .
-              args=c("responsecurves") ## parameter specification
-              )
-# the maxent functions runs a model in the default settings. To change these parameters,
-# you have to tell it what you want...i.e. response curves or the type of features
-
-# view the maxent model in a html brower
-mod_pyrr
-
-# view detailed results
-mod_pyrr@results
+raster.overlap(pyrrhuloxia.mx, northerncardinal.mx)
 
 
-# example 1, project to study area [raster]
-pyrr <- predict(mod_pyrr, env)  # studyArea is the clipped rasters
-plot(pyrr)  # plot the continuous prediction
+monticola.mx <- enmtools.maxent(monticola, env, test.prop = 0.2)
 
-rgdal::writeGDAL(as(pyrr, "SpatialGridDataFrame"),
- paste("pyrr.asc"),
- drivername = "AAIGrid")
+pyrr_spp <- enmtools.species()
 
-diff <- noca - pyrr
+pyrr_spp$species.name <- "pyrrhuloxia"
+pyrr_spp$presence.points <- pyrr_occ_test
+crs(pyrr_spp$presence.points) <- crs(env)
+pyrr_spp$range <- background.raster.buffer(pyrr_spp$presence.points, 50000, mask = env)
+pyrr_spp$background.points <- background.points.buffer(points = pyrr_spp$presence.points,
+radius = 20000, n = 1000, mask = env[[1]])
 
-rgdal::writeGDAL(as(diff, "SpatialGridDataFrame"),
- paste("diff.asc"),
- drivername = "AAIGrid")
+noca_spp <- enmtools.species()
+
+noca_spp$species.name <- "northerncardinal"
+noca_spp$presence.points <- noca_occ_test
+crs(noca_spp$presence.points) <- crs(env)
+noca_spp$range <- background.raster.buffer(noca_spp$presence.points, 50000, mask = env)
+noca_spp$background.points <- background.points.buffer(points = noca_spp$presence.points,
+radius = 20000, n = 1000, mask = env[[1]])
+
+id.mx <- identity.test(species.1 = noca_spp, species.2 = pyrr_spp, env = env, type = "mx", nreps = 100)
+
+id.mx
+
+write.csv(id.mx$reps.overlap, "arizona_nichesimilarityreps.csv")
+
+Identity test northerncardinal vs. pyrrhuloxia
+
+Identity test p-values:
+         D          I   rank.cor      env.D      env.I    env.cor
+0.00990099 0.00990099 0.00990099 0.06930693 0.04950495 0.21782178
+
+
+Replicates:
+
+
+|          |         D|         I|  rank.cor|     env.D|     env.I|   env.cor|
+|:---------|---------:|---------:|---------:|---------:|---------:|---------:|
+|empirical | 0.5741155| 0.8509405| 0.6855253| 0.4683437| 0.7438084| 0.5728319|
+|rep 1     | 0.7412515| 0.9360042| 0.8465169| 0.5780402| 0.8340681| 0.4796405|
+|rep 2     | 0.7322511| 0.9300634| 0.7955889| 0.4729100| 0.7580449| 0.4285505|
+|rep 3     | 0.7742722| 0.9520529| 0.8681796| 0.5977788| 0.8586594| 0.6273763|
+|rep 4     | 0.8029742| 0.9627117| 0.8983793| 0.5601776| 0.8297558| 0.7371372|
+|rep 5     | 0.7581388| 0.9426697| 0.8232227| 0.6096209| 0.8727243| 0.7560276|
+
+bg.bc.asym <- background.test(species.1 = noca_spp, species.2 = pyrr_spp, env = env, type = "bc", nreps = 4, test.type = "asymmetric" )
+
+bg.bc.asym 
+
+Asymmetric background test
+ northerncardinal vs. pyrrhuloxia background
+
+
+background test p-values:
+
+       D        I rank.cor    env.D    env.I  env.cor 
+     0.2      0.2      0.2      0.2      0.2      0.2 
+
+
+Replicates:
+
+
+
+|          |         D|         I|  rank.cor| env.D| env.I| env.cor|
+|:---------|---------:|---------:|---------:|-----:|-----:|-------:|
+|empirical | 0.5804347| 0.8480785| 0.7842029|    NA|    NA|      NA|
+|rep 1     | 0.7063995| 0.9189767| 0.8526249|    NA|    NA|      NA|
+|rep 2     | 0.6807615| 0.9048107| 0.8420001|    NA|    NA|      NA|
+|rep 3     | 0.7024077| 0.9183363| 0.8483261|    NA|    NA|      NA|
+|rep 4     | 0.6809501| 0.9014666| 0.8136654|    NA|    NA|      NA|
+
+bg.dm.sym <- background.test(species.1 = noca_spp, species.2 = pyrr_spp, env = env, type = "dm", nreps = 4, test.type = "symmetric" )
+
+bg.dm.sym 

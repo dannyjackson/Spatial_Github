@@ -1,17 +1,23 @@
 #!/usr/bin/env Rscript
 
+module purge 
+module load r-4.2.2-gcc-11.2.0
+module load sqlite-3.38.5-gcc-11.2.0
+module load proj-8.2.1-gcc-11.2.0
+module load gdal-3.4.3-gcc-11.2.0
+module load geos-3.9.1-gcc-11.2.0
 
 library(tidyverse)
 
-setwd("/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/MaxentNull")
+setwd("/scratch/dnjacks4/asks/smaller/null_output/")
 
-fileNames <- list.files(path="/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/MaxentNull/stats/")
+fileNames <- list.files(path="/scratch/dnjacks4/asks/smaller/null_output/stats/")
 
-df <- (matrix(ncol = 0, nrow = 72))
+df <- (matrix(ncol = 0, nrow = 76))
 
 for (fileName in fileNames) {
 
-file <- read_csv(paste0("/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/MaxentNull/stats/", fileName))
+file <- read_csv(paste0("/scratch/dnjacks4/asks/smaller/null_output/stats/", fileName))
 
 name <- gsub(".csv", '', fileName)
 
@@ -40,9 +46,9 @@ diff_null <- df_noca - df_pyrr
 # read in the empirical file and filter it down to just rows ft "contribution"
 
 
-noca_file <- read_csv("/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/MaxentEmpirical/noca_1.csv")
+noca_file <- read_csv("/scratch/dnjacks4/asks/smaller/maxent_output/output/maxent_outputs/noca/species.csv")
 
-pyrr_file <- read_csv("/Volumes/BackupPlus/GIS_files/May2022/FromAgave/TucsonLayer/MaxentEmpirical/pyrr_1.csv")
+pyrr_file <- read_csv("/scratch/dnjacks4/asks/smaller/maxent_output/output/maxent_outputs/pyrr/species.csv")
 
 colnames(noca_file) <- c("type", "statistic")
 colnames(pyrr_file) <- c("type", "statistic")

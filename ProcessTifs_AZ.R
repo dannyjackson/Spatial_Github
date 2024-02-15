@@ -23,7 +23,7 @@ ext <- extent(-114.8, -109.0, 31.3, 37.0)
 
 # process reference file
 
-assign(paste0("reference_", "raw"), raster('tifs/nlcd_continuous_clipped_r3_11.tif'))
+assign(paste0("reference_", "raw"), raster('tifs/Clim8.tif'))
 
 reference_projected <- projectRaster(reference_raw, crs=projection)
 
@@ -116,7 +116,7 @@ ScriptR = function(fileName){
   print("Writing to file")
 
   rgdal::writeGDAL(as(r, "SpatialGridDataFrame"),
-   paste0(fileName,".asc"),
+   paste0("/smaller/", fileName,".asc"),
    drivername = "AAIGrid")
 
   print("Done")
@@ -127,3 +127,71 @@ ScriptR = function(fileName){
 }
 
 mclapply(fileNames, ScriptR, mc.set.seed=FALSE)
+
+
+
+
+for (fileName in fileNames){
+# looped over buffered files already prepped for maxent
+
+  print(fileName)
+
+  # process reference file
+  assign(paste0("raster_", "raw"), raster(paste0(fileName)))
+
+  raster_projected <- projectRaster(raster_raw, reference_tend, value=NA)
+
+  rm(raster_raw)
+
+  # create variable equal to final raster
+
+  assign(paste0("raster_final"), raster_projected)
+
+  print("Resampling")
+
+  # Resample all datasets across pixels of landcover file
+
+  raster_final_re <- resample(raster_final, reference_tend)
+
+  # rm(raster_final)
+  rm(raster_projected)
+  print("Re-extending")
+
+  # Re-extend dataets to make sure that their shared extent was not influenced by the resampling
+
+  raster_tend <- extend(raster_final, ext, value=NA)
+
+  # arizona extent
+  e <- as(extent(-114.8, -109.0, 31.3, 37.0), 'SpatialPolygons')
+
+  # Arizona
+  crs(e) <- "+proj=longlat +datum=WGS84 +no_defs"
+  r <- crop(raster_tend, extent(e))
+
+  #Now all datasets are identical in extent, resolution, etc.
+
+  r[is.na(r[])] <- 0
+
+  #Write these environmental datasets out in .asc format
+
+  print("Writing to file")
+
+  rgdal::writeGDAL(as(r, "SpatialGridDataFrame"),
+   paste0(fileName,".asc"),
+   drivername = "AAIGrid")
+
+  print("Done")
+  rm(raster_final_re)
+  rm(raster_tend)
+  rm(r_raster)
+  rm(r)
+}
+
+
+
+library("raster")
+library("dismo")
+library("rgeos")
+library("rJava")
+library("knitr")
+library("ENMTools")

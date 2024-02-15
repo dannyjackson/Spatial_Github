@@ -1,6 +1,3 @@
-#!/usr/bin/env Rscript
-# https://github.com/shandongfx/workshop_maxent_R/blob/master/code/Appendix1_case_study.md
-
 module purge
 module load r-4.2.2-gcc-11.2.0
 module load sqlite-3.38.5-gcc-11.2.0
@@ -13,9 +10,6 @@ module load libvterm-0.1.4-gcc-11.2.0
 
 # running maxent through commandline without gui
 
-install.packages("rJava", type="source")
-install.packages("rJava", configure.args="--disable-jri", type="source")
-
 library("raster")
 library("dismo")
 library("rgeos")
@@ -23,11 +17,13 @@ library("rJava")
 library("knitr")
 library("ENMTools")
 
-setwd("/scratch/dnjacks4/asks/smaller/arizona/maxent_output")
+
+setwd("/scratch/dnjacks4/asks/smaller/tucson/")
 
 
 
-knitr::opts_knit$set(root.dir = '/scratch/dnjacks4/asks/smaller/maxent_output/')
+
+knitr::opts_knit$set(root.dir = '/scratch/dnjacks4/asks/smaller/tucson/maxent_output/')
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
 utils::download.file(url = "https://raw.githubusercontent.com/mrmaxent/Maxent/master/ArchivedReleases/3.3.3k/maxent.jar",
@@ -35,19 +31,15 @@ utils::download.file(url = "https://raw.githubusercontent.com/mrmaxent/Maxent/ma
         "/maxent.jar"), mode = "wb")  ## wb for binary file, otherwise maxent.jar can not execute
 
 
-all.env.files<-list.files(path="/scratch/dnjacks4/asks/smaller/arizona/formaxent", pattern = "*.asc$", full.names=TRUE)
-
-e <- as(extent(-114.8, -109.044, 31.3356, 37.0), 'SpatialPolygons')
-
-for (p in all.env.files) {
-  q <- raster(p)
-  r <- crop(q, extent(e))
-  rgdal::writeGDAL(as(r, "SpatialGridDataFrame"), paste0(p, ".cropped.asc"), drivername = "AAIGrid")
-}
-x <- raster("/scratch/dnjacks4/asks/smaller/arizona/formaxent/ClimPC_smaller_2.tif.asc")
-extent(x)
+all.env.files<-list.files(path="/scratch/dnjacks4/asks/smaller/tucson/formaxent", pattern = "*.asc$", full.names=TRUE)
 
 env<-stack(all.env.files)
+
+
+correlations<-raster.cor.matrix(env)
+
+print("writing correlations matrix")
+write.csv(correlations,"correlations_Tuc_all.csv")
 
 
 birds <- read.csv("~/FilesToAgave/Birds/NOCAandPYRR_eBirdandTBCandCAPLTER_04_05_2017to2021.csv")
@@ -110,7 +102,7 @@ cat(nrow(noca_occ_unique) - nrow(noca_occ_final), "records are removed")
 # the same "random samples"
 set.seed(1)
 bg <- sampleRandom(x=env,
-                   size=10000,
+                   size=2500,
                    na.rm=T, #removes the 'Not Applicable' points
                    sp=T) # return spatial points
 
@@ -157,38 +149,7 @@ pder <- as.data.frame(rbind(p, a))
 
 
 
-# train Maxent with spatial data
-# mod <- maxent(x=clim,p=occ_train)
-
-# train Maxent with tabular data
-mod_noca <- maxent(x=pder, ## env conditions
-              p=pa,   ## 1:presence or 0:absence
-
-              path=paste0("./output/maxent_outputs/noca"), ## folder for maxent output;
-              # if we do not specify a folder R will put the results in a temp file,
-              # and it gets messy to read those. . .
-              args=c("responsecurves") ## parameter specification
-              )
-# the maxent functions runs a model in the default settings. To change these parameters,
-# you have to tell it what you want...i.e. response curves or the type of features
-
-# view the maxent model in a html brower
-mod_noca
-
-# view detailed results
-mod_noca@results
-
-
-# example 1, project to study area [raster]
-noca <- predict(mod_noca, env)  # studyArea is the clipped rasters
-plot(noca)  # plot the continuous prediction
-
-rgdal::writeGDAL(as(noca, "SpatialGridDataFrame"),
- paste("noca.asc"),
- drivername = "AAIGrid")
-
-
-
+############### pyrrhuloxia
 
 
 
@@ -216,7 +177,7 @@ plot(pyrr_occ_unique, add = TRUE)  # plot the oc_unique on the above raster laye
 # Set to your own boundaries!!!
 # pyrr_occ_unique <- pyrr_occ_unique[which(pyrr_occ_unique$lon > -111.183682000 & pyrr_occ_unique$lon <
     -110.720903000), ]
-# pyrr_occ_unique <- pyrr_occ_unique[which(pyrr_occ_unique$lat > 32.034553000 & pyrr_occ_unique$lat <
+pyrr_occ_unique <- pyrr_occ_unique[which(pyrr_occ_unique$lat > 32.034553000 & pyrr_occ_unique$lat <
     32.554540000), ]
 
     plot(env[[1]])  # to the first layer of the bioclim layers as a reference
@@ -236,7 +197,7 @@ cat(nrow(pyrr_occ_unique) - nrow(pyrr_occ_final), "records are removed")
 # the same "random samples"
 set.seed(1)
 bg <- sampleRandom(x=env,
-                   size=10000,
+                   size=2500,
                    na.rm=T, #removes the 'Not Applicable' points
                    sp=T) # return spatial points
 
@@ -282,39 +243,46 @@ pder <- as.data.frame(rbind(p, a))
 
 
 
+pyrr_spp <- enmtools.species()
 
-# train Maxent with spatial data
-# mod <- maxent(x=clim,p=occ_train)
+pyrr_spp$species.name <- "pyrrhuloxia"
+pyrr_spp$presence.points <- pyrr_occ_test
+crs(pyrr_spp$presence.points) <- crs(env)
+pyrr_spp$range <- background.raster.buffer(pyrr_spp$presence.points, 50000, mask = env)
+pyrr_spp$background.points <- background.points.buffer(points = pyrr_spp$presence.points,
+radius = 20000, n = 1000, mask = env[[1]])
 
-# train Maxent with tabular data
-mod_pyrr <- maxent(x=pder, ## env conditions
-              p=pa,   ## 1:presence or 0:absence
+noca_spp <- enmtools.species()
+noca_spp$species.name <- "northerncardinal"
+noca_spp$presence.points <- noca_occ_test
+crs(noca_spp$presence.points) <- crs(env)
+noca_spp$range <- background.raster.buffer(noca_spp$presence.points, 50000, mask = env)
+noca_spp$background.points <- background.points.buffer(points = noca_spp$presence.points,
+radius = 20000, n = 1000, mask = env[[1]])
 
-              path=paste0("./output/maxent_outputs/pyrr"), ## folder for maxent output;
-              # if we do not specify a folder R will put the results in a temp file,
-              # and it gets messy to read those. . .
-              args=c("responsecurves") ## parameter specification
-              )
-# the maxent functions runs a model in the default settings. To change these parameters,
-# you have to tell it what you want...i.e. response curves or the type of features
+id.mx <- identity.test(species.1 = noca_spp, species.2 = pyrr_spp, env = env, type = "mx", nreps = 100)
 
-# view the maxent model in a html brower
-mod_pyrr
+id.mx
 
-# view detailed results
-mod_pyrr@results
+write.csv(id.mx$reps.overlap, "tucson_nichesimilarityreps.csv")
+Identity test northerncardinal vs. pyrrhuloxia
 
 
-# example 1, project to study area [raster]
-pyrr <- predict(mod_pyrr, env)  # studyArea is the clipped rasters
-plot(pyrr)  # plot the continuous prediction
+Identity test northerncardinal vs. pyrrhuloxia
 
-rgdal::writeGDAL(as(pyrr, "SpatialGridDataFrame"),
- paste("pyrr.asc"),
- drivername = "AAIGrid")
+Identity test p-values:
+         D          I   rank.cor      env.D      env.I    env.cor
+0.01980198 0.02970297 0.04950495 0.06930693 0.07920792 0.19801980
 
-diff <- noca - pyrr
 
-rgdal::writeGDAL(as(diff, "SpatialGridDataFrame"),
- paste("diff.asc"),
- drivername = "AAIGrid")
+Replicates:
+
+
+|          |         D|         I|  rank.cor|     env.D|     env.I|   env.cor|
+|:---------|---------:|---------:|---------:|---------:|---------:|---------:|
+|empirical | 0.7422603| 0.9364460| 0.8052075| 0.4344639| 0.7390696| 0.1424654|
+|rep 1     | 0.8124584| 0.9647743| 0.8619987| 0.7341720| 0.9266411| 0.4252979|
+|rep 2     | 0.8007795| 0.9590123| 0.8598044| 0.6973884| 0.9152524| 0.4018990|
+|rep 3     | 0.7951330| 0.9561415| 0.8353082| 0.5656355| 0.8403632| 0.2255796|
+|rep 4     | 0.7755210| 0.9488503| 0.8310783| 0.5391490| 0.8120642| 0.1855800|
+|rep 5     | 0.8129983| 0.9638689| 0.8586603| 0.4264993| 0.7312346| 0.2287873|

@@ -413,9 +413,9 @@ plot(pyrr_occ_unique, add = TRUE)  # plot the oc_unique on the above raster laye
 
 # remove erroneous points (i.e., only keep good records)
 # Set to your own boundaries!!!
-pyrr_occ_unique <- pyrr_occ_unique[which(pyrr_occ_unique$lon > -111.183682000 & pyrr_occ_unique$lon <
+# pyrr_occ_unique <- pyrr_occ_unique[which(pyrr_occ_unique$lon > -111.183682000 & pyrr_occ_unique$lon <
     -110.720903000), ]
-pyrr_occ_unique <- pyrr_occ_unique[which(pyrr_occ_unique$lat > 32.034553000 & pyrr_occ_unique$lat <
+# pyrr_occ_unique <- pyrr_occ_unique[which(pyrr_occ_unique$lat > 32.034553000 & pyrr_occ_unique$lat <
     32.554540000), ]
 
     plot(env[[1]])  # to the first layer of the bioclim layers as a reference

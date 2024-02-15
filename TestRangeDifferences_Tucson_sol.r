@@ -1,4 +1,3 @@
-#!/usr/bin/env Rscript
 
 library("raster")
 library("dismo")
@@ -7,12 +6,12 @@ library("rJava")
 library("knitr")
 library("ENMTools")
 
-setwd("/scratch/dnjacks4/asks/smaller/null_output/")
+setwd("/scratch/dnjacks4/asks/smaller/tucson")
 
-assign("empirical", raster('/scratch/dnjacks4/asks/smaller/arizona/maxent_output/diff.asc'))
+assign("empirical", raster('/scratch/dnjacks4/asks/smaller/tucson/maxent_output/diff_tucson_mar13.asc'))
 
 
-null.files <- list.files(path="/scratch/dnjacks4/asks/smaller/null_output/asks/diff/", pattern = '(.asc$)', full.names=TRUE)
+null.files <- list.files(path="/scratch/dnjacks4/asks/smaller/tucson/null_output/asks/diff/", pattern = '(.asc$)', full.names=TRUE)
 
 stat.raster.noca <- empirical * 0
 
@@ -41,11 +40,16 @@ stat.raster.noca <- stat.raster.noca + r
 }
 
 empirical_noca <- empirical 
-empirical_noca[stat.raster.noca < 950] <- 0
+empirical_noca[stat.raster < 950] <- 0
 
-empirical[stat.raster < 950] <- 0
 
-assign("empirical", raster('/scratch/dnjacks4/asks/smaller/arizona/maxent_output/diff.asc'))
+
+rgdal::writeGDAL(as(empirical, "SpatialGridDataFrame"),
+ paste("stat_difference.asc"),
+ drivername = "AAIGrid")
+
+assign("empirical", raster('/scratch/dnjacks4/asks/smaller/tucson/maxent_output/diff_tucson.asc'))
+
 
 stat.raster.pyrr <- empirical * 0
 
@@ -75,7 +79,6 @@ r[r > 0] <- 1
 stat.raster.pyrr <- stat.raster.pyrr + r
 
 }
-
 
 empirical_pyrr <- empirical 
 
